@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "grpcxx",
+  "version": "0.8.0",
+  "description": "Strictly single-threaded C++26 io_uring proactor gRPC framework",
+  "dependencies": [
+    "fmt"
+  ],
+  "features": {
+    "tests": {
+      "description": "Unit tests (GoogleTest)",
+      "dependencies": [
+        "gtest"
+      ]
+    },
+    "benchmarks": {
+      "description": "Microbenchmarks (Google Benchmark)",
+      "dependencies": [
+        "benchmark"
+      ]
+    },
+    "transport": {
+      "description": "HTTP/2, TLS, io_uring, DNS and message compression backends",
+      "dependencies": [
+        "nghttp2",
+        "openssl",
+        "liburing",
+        "c-ares",
+        "zlib",
+        "zstd",
+        "lz4",
+        "snappy"
+      ]
+    },
+    "full": {
+      "description": "Transport backends plus all IDL message codecs",
+      "dependencies": [
+        "nghttp2",
+        "openssl",
+        "liburing",
+        "c-ares",
+        "zlib",
+        "zstd",
+        "lz4",
+        "snappy",
+        "protobuf",
+        "capnproto"
+      ]
+    },
+    "codec-fory": {
+      "description": "Apache Fory codec (local overlay port)",
+      "dependencies": [
+        "fory"
+      ]
+    }
+  }
+}

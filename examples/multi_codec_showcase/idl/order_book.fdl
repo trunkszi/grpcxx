@@ -1,0 +1,11 @@
+package examples.order_book.fory;
+
+message QuoteRequest { int64 id = 1; string symbol = 2; }
+message QuoteResponse { int64 id = 1; int64 price = 2; int64 server = 3; }
+message OrderRequest { int64 id = 1; string symbol = 2; int64 quantity = 3; }
+message OrderResponse { int64 id = 1; int64 quantity = 2; int64 server = 3; }
+
+service OrderBook {
+  rpc Quote(QuoteRequest) returns (QuoteResponse);
+  rpc PlaceOrder(OrderRequest) returns (OrderResponse);
+}

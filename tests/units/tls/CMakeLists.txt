@@ -1,0 +1,5 @@
+add_executable(test_memory_bio_tls13 test_memory_bio_tls13.cc)
+target_link_libraries(test_memory_bio_tls13 PRIVATE grpcxx::tls OpenSSL::SSL fmt::fmt GTest::gtest_main)
+target_compile_definitions(test_memory_bio_tls13 PRIVATE GRPCXX_TLS_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME memory_bio_tls13 COMMAND test_memory_bio_tls13)
+set_tests_properties(memory_bio_tls13 PROPERTIES LABELS "unit;library;tls;memory_bio")

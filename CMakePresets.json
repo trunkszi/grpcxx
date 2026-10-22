@@ -1,0 +1,125 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "gcc-glibc",
+      "displayName": "GCC 16 / glibc (host dependencies)",
+      "description": "GCC 16 reflection compiler and ABI-matched dependencies installed by ./build.py setup.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/gcc-glibc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/.local/toolchain/gcc-glibc/bin/x86_64-unknown-linux-gnu-g++",
+        "CMAKE_PREFIX_PATH": "$env{HOME}/.local/grpcxx-deps/gcc-glibc;/usr",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,--sysroot=/ -L/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/usr/lib/x86_64-linux-gnu -Wl,--dynamic-linker=/lib64/ld-linux-x86-64.so.2",
+        "CMAKE_SYSROOT": "/",
+        "CMAKE_CXX_FLAGS": "-B/usr/lib/x86_64-linux-gnu -idirafter /usr/include/x86_64-linux-gnu"
+      },
+      "environment": {
+        "PKG_CONFIG_PATH": "$env{HOME}/.local/grpcxx-deps/gcc-glibc/lib/pkgconfig:$penv{PKG_CONFIG_PATH}"
+      }
+    },
+    {
+      "name": "gcc-glibc-vcpkg",
+      "displayName": "GCC 16 / glibc (vcpkg manifest)",
+      "description": "Installs dependencies from vcpkg.json, including the local fory overlay port.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/gcc-glibc-vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/.local/toolchain/gcc-glibc/bin/x86_64-unknown-linux-gnu-g++",
+        "CMAKE_TOOLCHAIN_FILE": "$env{HOME}/.vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_OVERLAY_PORTS": "$env{HOME}/.local/vcpkg",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/gcc-glibc-vcpkg/vcpkg_installed",
+        "VCPKG_MANIFEST_MODE": "ON",
+        "VCPKG_MANIFEST_FEATURES": "tests;benchmarks",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON"
+      }
+    },
+    {
+      "name": "gcc-musl",
+      "displayName": "GCC 16 / musl",
+      "description": "Declared for the four-toolchain matrix; needs musl dependency builds on the target host.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/gcc-musl",
+      "environment": {
+        "TOOLCHAIN_ROOT": "$env{HOME}/.local/toolchain"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/clt_cpp/cmake/toolchain/wrappers/gcc-musl-cxx",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON"
+      }
+    },
+    {
+      "name": "clang-glibc",
+      "displayName": "Clang 21 P2996 / glibc",
+      "description": "Declared for the four-toolchain matrix; needs a P2996 clang plus glibc dependency builds.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/clang-glibc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/.local/toolchain/clang-glibc/bin/clang++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON"
+      }
+    },
+    {
+      "name": "clang-musl",
+      "displayName": "Clang 21 P2996 / musl",
+      "description": "Declared for the four-toolchain matrix; needs musl dependency builds on the target host.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/clang-musl",
+      "environment": {
+        "TOOLCHAIN_ROOT": "$env{HOME}/.local/toolchain"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/clt_cpp/cmake/toolchain/wrappers/clang-musl-cxx",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc-glibc",
+      "configurePreset": "gcc-glibc",
+      "jobs": 8
+    },
+    {
+      "name": "gcc-glibc-vcpkg",
+      "configurePreset": "gcc-glibc-vcpkg",
+      "jobs": 8
+    },
+    {
+      "name": "gcc-musl",
+      "configurePreset": "gcc-musl",
+      "jobs": 8
+    },
+    {
+      "name": "clang-glibc",
+      "configurePreset": "clang-glibc",
+      "jobs": 8
+    },
+    {
+      "name": "clang-musl",
+      "configurePreset": "clang-musl",
+      "jobs": 8
+    }
+  ]
+}

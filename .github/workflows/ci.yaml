@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gcc-glibc:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GRPCXX_SETUP_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Cache reflection compiler and native dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/toolchain
+            ~/.local/grpcxx-deps/gcc-glibc
+          key: gcc16-ubuntu24-v1-${{ hashFiles('scripts/install-dependencies.sh', '.github/scripts/setup-ci-deps.sh') }}
+      - name: Install build tools and dependencies
+        run: |
+          bash scripts/install-dependencies.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Enable io_uring
+        run: sudo sysctl -w kernel.io_uring_disabled=0 || true
+      - name: Lint CLI
+        run: uv run --directory scripts/cli ruff check .
+      - name: Test CLI
+        run: uv run --directory scripts/cli pytest
+      - name: Check C++ formatting
+        run: ./build.py format --check src tests examples benches
+      - name: Check source file size limits
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess
+          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          for name in names:
+              path = pathlib.Path(name)
+              if path.is_file() and (path.suffix in {'.h', '.cc', '.py'} or path.name == 'CMakeLists.txt'):
+                  lines = len(path.read_bytes().splitlines())
+                  if lines > 800:
+                      raise SystemExit(f'{name}: {lines} lines exceeds 800')
+          PY
+      - name: Build and test C++26 framework
+        run: ./build.py test -j 2
+      - name: Run framing benchmark
+        run: ./build.py bench -j 2
