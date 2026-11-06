@@ -1,0 +1,64 @@
+--- a/c++/src/kj/encoding.c++
++++ b/c++/src/kj/encoding.c++
+@@ -260,8 +260,8 @@
+ Array<To> coerceTo(Array<From>&& array) {
+   static_assert(sizeof(To) == sizeof(From), "incompatible coercion");
+   Array<wchar_t> result;
+-  memcpy(&result, &array, sizeof(array));
+-  memset(&array, 0, sizeof(array));
++  memcpy(static_cast<void*>(&result), &array, sizeof(array));
++  memset(static_cast<void*>(&array), 0, sizeof(array));
+   return result;
+ }
+ 
+--- a/c++/src/capnp/dynamic.c++
++++ b/c++/src/capnp/dynamic.c++
+@@ -1503,7 +1503,7 @@
+       return;
+   }
+ 
+-  memcpy(this, &other, sizeof(*this));
++  memcpy(static_cast<void*>(this), &other, sizeof(*this));
+ }
+ DynamicValue::Reader::Reader(Reader&& other) noexcept {
+   switch (other.type) {
+@@ -1533,7 +1533,7 @@
+       return;
+   }
+ 
+-  memcpy(this, &other, sizeof(*this));
++  memcpy(static_cast<void*>(this), &other, sizeof(*this));
+ }
+ DynamicValue::Reader::~Reader() noexcept(false) {
+   if (type == CAPABILITY) {
+@@ -1588,7 +1588,7 @@
+       return;
+   }
+ 
+-  memcpy(this, &other, sizeof(*this));
++  memcpy(static_cast<void*>(this), &other, sizeof(*this));
+ }
+ DynamicValue::Builder::Builder(Builder&& other) noexcept {
+   switch (other.type) {
+@@ -1622,7 +1622,7 @@
+       return;
+   }
+ 
+-  memcpy(this, &other, sizeof(*this));
++  memcpy(static_cast<void*>(this), &other, sizeof(*this));
+ }
+ DynamicValue::Builder::~Builder() noexcept(false) {
+   if (type == CAPABILITY) {
+--- a/c++/src/kj/async.c++
++++ b/c++/src/kj/async.c++
+@@ -1468,8 +1468,10 @@
+ 
+     auto& stack = *reinterpret_cast<FiberStack*>(ptr);
+ 
++#if KJ_USE_FIBERS
+     __sanitizer_finish_switch_fiber(nullptr,
+         &stack.impl->originalBottom, &stack.impl->originalSize);
++#endif
+ 
+     // We first switch to the fiber inside of the FiberStack constructor. This is just for
+     // initialization purposes, and we're expected to switch back immediately.

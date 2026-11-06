@@ -1,0 +1,6 @@
+find_path(GRPCXX_COMPRESSION_TEST_ZSTD_INCLUDE_DIR NAMES zstd.h REQUIRED)
+add_executable(test_compression_algorithms test_compression_algorithms.cc)
+target_include_directories(test_compression_algorithms PRIVATE "${GRPCXX_COMPRESSION_TEST_ZSTD_INCLUDE_DIR}")
+target_link_libraries(test_compression_algorithms PRIVATE grpcxx::compression fmt::fmt GTest::gtest_main)
+add_test(NAME compression_algorithms COMMAND test_compression_algorithms)
+set_tests_properties(compression_algorithms PROPERTIES LABELS "unit;library;compression;codecs")

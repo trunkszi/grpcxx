@@ -1,0 +1,9 @@
+package fory_fixture;
+message Request { int64 id = 1; string symbol = 2; }
+message Response { int64 id = 1; }
+service Showcase {
+  rpc Unary(Request) returns (Response);
+  rpc ServerStream(Request) returns (stream Response);
+  rpc ClientStream(stream Request) returns (Response);
+  rpc Bidi(stream Request) returns (stream Response);
+}

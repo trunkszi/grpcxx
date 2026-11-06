@@ -1,0 +1,160 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 30,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "gcc-glibc",
+      "displayName": "GCC 16 / glibc (host dependencies)",
+      "description": "GCC 16 reflection compiler and ABI-matched dependencies installed by ./build.py setup.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/gcc-glibc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/.local/toolchain/gcc-glibc/bin/x86_64-unknown-linux-gnu-g++",
+        "CMAKE_PREFIX_PATH": "$env{HOME}/.local/grpcxx-deps/gcc-glibc;/usr",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,--sysroot=/ -L/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/usr/lib/x86_64-linux-gnu -Wl,--dynamic-linker=/lib64/ld-linux-x86-64.so.2",
+        "CMAKE_SYSROOT": "/",
+        "CMAKE_CXX_FLAGS": "-B/usr/lib/x86_64-linux-gnu -idirafter /usr/include/x86_64-linux-gnu -idirafter /usr/include",
+        "CMAKE_C_FLAGS": "-B/usr/lib/x86_64-linux-gnu -idirafter /usr/include/x86_64-linux-gnu -idirafter /usr/include"
+      },
+      "environment": {
+        "PKG_CONFIG_PATH": "$env{HOME}/.local/grpcxx-deps/gcc-glibc/lib/pkgconfig:$penv{PKG_CONFIG_PATH}",
+        "FORY_PYTHON": "$env{HOME}/.local/share/fory-venv/bin/python3"
+      }
+    },
+    {
+      "name": "gcc-musl",
+      "displayName": "GCC 16 / musl",
+      "description": "Declared for the four-toolchain matrix; needs musl dependency builds on the target host.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/gcc-musl",
+      "environment": {
+        "TOOLCHAIN_ROOT": "$env{HOME}/.local/toolchain"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/clt_cpp/cmake/toolchain/wrappers/gcc-musl-cxx",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON"
+      }
+    },
+    {
+      "name": "clang-glibc",
+      "displayName": "Clang P2996 / glibc (libc++)",
+      "description": "Clang P2996 reflection compiler and ABI-matched libc++ dependencies installed by ./build.py setup.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/clang-glibc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/.local/toolchain/clang-glibc/bin/clang++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON",
+        "CMAKE_PREFIX_PATH": "$env{HOME}/.local/grpcxx-deps/clang-glibc;/usr",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++ -B/usr/lib/x86_64-linux-gnu -idirafter /usr/include/x86_64-linux-gnu -idirafter /usr/include",
+        "CMAKE_SYSROOT": "$env{HOME}/.local/toolchain/clang-glibc/x86_64-unknown-linux-gnu/sysroot",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,--sysroot=/ -L/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/usr/lib/x86_64-linux-gnu -Wl,--dynamic-linker=/lib64/ld-linux-x86-64.so.2 --rtlib=compiler-rt --unwindlib=libunwind -Wl,-rpath,$env{HOME}/.local/toolchain/clang-glibc/x86_64-unknown-linux-gnu/sysroot/usr/lib",
+        "CMAKE_C_COMPILER": "$env{HOME}/.local/toolchain/clang-glibc/bin/clang",
+        "CMAKE_C_FLAGS": "-B/usr/lib/x86_64-linux-gnu -idirafter /usr/include/x86_64-linux-gnu -idirafter /usr/include"
+      },
+      "environment": {
+        "PKG_CONFIG_PATH": "$env{HOME}/.local/grpcxx-deps/clang-glibc/lib/pkgconfig:$penv{PKG_CONFIG_PATH}",
+        "FORY_PYTHON": "$env{HOME}/.local/share/fory-venv/bin/python3",
+        "PATH": "$env{HOME}/.local/grpcxx-deps/clang-glibc/bin:$penv{PATH}"
+      }
+    },
+    {
+      "name": "clang-musl",
+      "displayName": "Clang 21 P2996 / musl",
+      "description": "Declared for the four-toolchain matrix; needs musl dependency builds on the target host.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/clang-musl",
+      "environment": {
+        "TOOLCHAIN_ROOT": "$env{HOME}/.local/toolchain"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "$env{HOME}/clt_cpp/cmake/toolchain/wrappers/clang-musl-cxx",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON"
+      }
+    },
+    {
+      "name": "gcc-asan",
+      "inherits": "gcc-glibc",
+      "binaryDir": "${sourceDir}/build/gcc-asan",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-B/usr/lib/x86_64-linux-gnu -idirafter /usr/include/x86_64-linux-gnu -idirafter /usr/include -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,--sysroot=/ -L/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/usr/lib/x86_64-linux-gnu -Wl,--dynamic-linker=/lib64/ld-linux-x86-64.so.2 -fsanitize=address,undefined"
+      }
+    },
+    {
+      "name": "clang-asan",
+      "inherits": "clang-glibc",
+      "binaryDir": "${sourceDir}/build/clang-asan",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++ -B/usr/lib/x86_64-linux-gnu -idirafter /usr/include/x86_64-linux-gnu -idirafter /usr/include -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,--sysroot=/ -L/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/usr/lib/x86_64-linux-gnu -Wl,--dynamic-linker=/lib64/ld-linux-x86-64.so.2 -fsanitize=address,undefined --rtlib=compiler-rt --unwindlib=libunwind -Wl,-rpath,$env{HOME}/.local/toolchain/clang-glibc/x86_64-unknown-linux-gnu/sysroot/usr/lib",
+        "CMAKE_SYSROOT": "$env{HOME}/.local/toolchain/clang-glibc/x86_64-unknown-linux-gnu/sysroot",
+        "CMAKE_PREFIX_PATH": "$env{HOME}/.local/grpcxx-deps/clang-glibc/asan;/usr"
+      },
+      "environment": {
+        "PKG_CONFIG_PATH": "$env{HOME}/.local/grpcxx-deps/clang-glibc/asan/lib/pkgconfig:$penv{PKG_CONFIG_PATH}",
+        "PATH": "$env{HOME}/.local/grpcxx-deps/clang-glibc/asan/bin:$penv{PATH}"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc-glibc",
+      "configurePreset": "gcc-glibc",
+      "jobs": 8
+    },
+    {
+      "name": "gcc-musl",
+      "configurePreset": "gcc-musl",
+      "jobs": 8
+    },
+    {
+      "name": "clang-glibc",
+      "configurePreset": "clang-glibc",
+      "jobs": 8
+    },
+    {
+      "name": "clang-musl",
+      "configurePreset": "clang-musl",
+      "jobs": 8
+    },
+    {
+      "name": "gcc-asan",
+      "configurePreset": "gcc-asan",
+      "jobs": 2
+    },
+    {
+      "name": "clang-asan",
+      "configurePreset": "clang-asan",
+      "jobs": 2
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "gcc-glibc",
+      "configurePreset": "gcc-glibc",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 2
+      }
+    }
+  ]
+}

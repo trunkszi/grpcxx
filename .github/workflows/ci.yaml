@@ -1,0 +1,121 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [gcc-glibc, clang-glibc]
+    env:
+      GRPCXX_SETUP_JOBS: '2'
+      GRPCXX_TOOLCHAIN: ${{ matrix.toolchain }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Cache compiler and ABI-specific dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/toolchain/${{ matrix.toolchain }}
+            ~/.local/grpcxx-deps/${{ matrix.toolchain }}
+            ~/.local/share/fory-venv
+          key: grpcxx-native-v3-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('scripts/install-dependencies.sh', '.github/scripts/setup-ci-deps.sh', '.github/patches/**', 'CMakePresets.json') }}
+      - name: Install native compiler and dependencies
+        run: |
+          bash scripts/install-dependencies.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Record kernel and enable io_uring
+        run: |
+          uname -a
+          sudo sysctl -w kernel.io_uring_disabled=0
+      - name: Check scripts and CLI
+        run: |
+          bash -n scripts/install-dependencies.sh .github/scripts/setup-ci-deps.sh
+          uv run --directory scripts/cli ruff check .
+          uv run --directory scripts/cli pytest
+      - name: Check C++ formatting
+        run: ./build.py format --check src tests examples benches
+      - name: Check file size limits
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess
+          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          for name in names:
+              path = pathlib.Path(name)
+              if path.is_file() and (path.suffix in {'.h', '.cc', '.py'} or path.name == 'CMakeLists.txt'):
+                  count = len(path.read_bytes().splitlines())
+                  if count > 800:
+                      raise SystemExit(f'{name}: {count} lines exceeds 800')
+          PY
+      - name: Build and run unit and E2E tests
+        run: ./build.py test --preset "$GRPCXX_TOOLCHAIN" -j 2
+      - name: Native performance smoke
+        run: ./build.py bench --preset "$GRPCXX_TOOLCHAIN" -j 2 -- --benchmark_min_time=0.01s
+      - name: Audit optimized proactor and runtime codegen
+        run: |
+          ./build.py build --preset "$GRPCXX_TOOLCHAIN" --target grpcxx-proactor-codegen -j 2
+          python3 - <<'PY'
+          import os, pathlib, re, subprocess
+          codegen_dir = pathlib.Path('build', os.environ['GRPCXX_TOOLCHAIN'], 'tests/units/uring/CMakeFiles/grpcxx-proactor-codegen.dir')
+          expected = {
+              'proactor_service.cc.o',
+              'uring_ring.cc.o',
+              'length_prefixed_frame.cc.o',
+              'aligned_message_buf.cc.o',
+              'nghttp2_server_session.cc.o',
+              'nghttp2_client_session.cc.o',
+              'load_balancer.cc.o',
+              'grpc_server_service.cc.o',
+              'client_channel_service.cc.o',
+              'health_service.cc.o',
+              'reflection_service.cc.o',
+              'stream_multiplexer.cc.o',
+          }
+          objects = {p.name: str(p) for p in codegen_dir.rglob('*.cc.o')}
+          assert expected.issubset(objects.keys()), (expected - objects.keys(), objects.keys())
+          toolchain = os.environ['GRPCXX_TOOLCHAIN']
+          tools = pathlib.Path.home() / '.local/toolchain' / toolchain / 'bin'
+          disassembler = tools / ('x86_64-unknown-linux-gnu-objdump' if toolchain == 'gcc-glibc' else 'llvm-objdump')
+          section_tool = ([str(tools / 'x86_64-unknown-linux-gnu-readelf'), '-SW'] if toolchain == 'gcc-glibc'
+                          else [str(tools / 'llvm-readobj'), '--sections'])
+          cold_init = ('ProactorService::Start(', 'StreamMultiplexer::StreamMultiplexer(', 'fmt::')
+          hot = set()
+          for name in sorted(expected):
+              obj = objects[name]
+              asm = subprocess.check_output([str(disassembler), '-d', '-C', '--no-show-raw-insn', obj], text=True)
+              current = ''
+              for line in asm.splitlines():
+                  if match := re.match(r'^[0-9a-f]+ <(.+)>:', line):
+                      current = match[1]
+                      if 'ProactorService::Queue(' in current or 'ProactorService::PollOnce(' in current:
+                          hot.add(current)
+                  if not any(tag in current for tag in cold_init):
+                      assert not re.search(r'\b(?:i?div[bwlq]?|__udivti3)\b', line), (name, current, line)
+              sections = subprocess.check_output([*section_tool, obj], text=True)
+              assert '.gcc_except_table' not in sections, name
+          assert len(hot) >= 2, hot
+          print(f'Verified {len(expected)} -O3 objects: no hot-path division; no exception tables')
+          PY
+      - name: Run ASan and UBSan lifecycle tests
+        run: |
+          if [[ "$GRPCXX_TOOLCHAIN" == gcc-glibc ]]; then preset=gcc-asan; else preset=clang-asan; fi
+          ./build.py test --preset "$preset" -j 2
+      - name: Archive test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-diagnostics-${{ matrix.toolchain }}
+          path: |
+            build/**/Testing/Temporary/
+            build/**/CMakeFiles/CMakeConfigureLog.yaml
+          if-no-files-found: ignore

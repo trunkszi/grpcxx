@@ -1,0 +1,84 @@
+[project]
+name = "grpcxx-cli"
+version = "1.0.0"
+description = "grpcxx - unified build, test, and development CLI"
+requires-python = ">=3.12"
+dependencies = [
+    "invoke>=2.2",
+    "typer>=0.15",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11",
+    "ty>=0.0.25",
+    "pytest>=9.0",
+    "pytest-cov>=4.0",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff: linting & formatting
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["."]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", # pycodestyle
+    "F", # pyflakes
+    "I", # isort
+    "N", # pep8-naming
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "RUF", # ruff-specific
+    "S", # flake8-bandit (security)
+    "LOG", # flake8-logging
+]
+ignore = [
+    "S101", # assert is fine in tests and CLI scripts
+    "E501", # line length handled by formatter
+    "B008", # function call in default argument (typer.Option pattern)
+    "B904", # raise from in except - typer.Exit doesn't chain
+    "S603", # subprocess call - we intentionally run cmake/ctest/etc.
+    "S607", # partial executable path - we run well-known build tools
+    "S110", # try-except-pass - used for best-effort tool discovery
+    "S104", # binding to 0.0.0.0 - intentional for coverage server
+    "TCH", # type-checking import blocks - adds complexity for CLI scripts
+    "UP042", # StrEnum - keep str+Enum for typer compatibility
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["cli"]
+
+# ---------------------------------------------------------------------------
+# Ty: type checking
+# ---------------------------------------------------------------------------
+[tool.ty.environment]
+python-version = "3.12"
+python-platform = "linux"
+python = ".venv"
+
+[tool.ty.src]
+include = ["."]
+
+[tool.ty.rules]
+unused-type-ignore-comment = "warn"
+unused-ignore-comment = "warn"
+
+[tool.pytest.ini_options]
+pythonpath = [".."]
+testpaths = ["tests"]
