@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 4.0)
+add_library(grpcxx_server STATIC grpc_server_service.cc grpc_server_io.cc)
+add_library(grpcxx::server ALIAS grpcxx_server)
+target_include_directories(grpcxx_server PUBLIC "${PROJECT_SOURCE_DIR}/src")
+target_link_libraries(grpcxx_server PUBLIC grpcxx::core nexora::nexora grpcxx::h2)
+target_compile_options(grpcxx_server PRIVATE -Werror)

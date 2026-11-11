@@ -1,0 +1,3 @@
+cmake_minimum_required(VERSION 4.0)
+add_executable(bench_multi_codec bench_multi_codec.cc)
+target_link_libraries(bench_multi_codec PRIVATE grpcxx_codec_fixtures benchmark::benchmark)

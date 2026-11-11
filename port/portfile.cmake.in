@@ -1,0 +1,46 @@
+vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
+
+vcpkg_from_github(
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO trunkszi/grpcxx
+    REF "@GIT_COMMIT_SHA@"
+    SHA512 @SHA512@
+    HEAD_REF main
+)
+
+vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+    FEATURES
+        capnproto GRPCXX_ENABLE_CAPNP
+        fory      GRPCXX_ENABLE_FORY
+)
+
+vcpkg_cmake_configure(
+    SOURCE_PATH "${SOURCE_PATH}"
+    OPTIONS
+        -DVCPKG_MANIFEST_MODE=OFF
+        -DGRPCXX_BUILD_TESTING=OFF
+        -DGRPCXX_BUILD_BENCHMARKS=OFF
+        -DGRPCXX_BUILD_EXAMPLES=OFF
+        -DGRPCXX_ENABLE_PROTOBUF=ON
+        ${FEATURE_OPTIONS}
+)
+
+vcpkg_cmake_install()
+
+vcpkg_cmake_config_fixup(
+    PACKAGE_NAME grpcxx
+    CONFIG_PATH lib/cmake/grpcxx
+)
+
+file(REMOVE_RECURSE
+    "${CURRENT_PACKAGES_DIR}/debug/include"
+    "${CURRENT_PACKAGES_DIR}/debug/tools"
+)
+
+vcpkg_copy_tools(TOOL_NAMES protoc-gen-grpcxx AUTO_CLEAN)
+if("capnproto" IN_LIST FEATURES)
+    vcpkg_copy_tools(TOOL_NAMES grpcxx-codegen AUTO_CLEAN)
+endif()
+
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")

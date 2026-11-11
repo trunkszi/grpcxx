@@ -1,0 +1,47 @@
+{
+  "name": "grpcxx",
+  "version-semver": "@VERSION@",
+  "description": "Runtime-free C++26 gRPC client and server framework with P2996 compile-time reflection",
+  "homepage": "https://github.com/trunkszi/grpcxx",
+  "license": "MIT",
+  "supports": "linux & x64",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    },
+    "uarch",
+    "uring",
+    "cares",
+    "nexora",
+    "fmt",
+    "zlib",
+    "zstd",
+    "lz4",
+    "snappy",
+    {
+      "name": "protobuf",
+      "features": [
+        "libprotoc"
+      ]
+    }
+  ],
+  "features": {
+    "capnproto": {
+      "description": "Enable Cap'n Proto codec and contract code generator",
+      "dependencies": [
+        "capnproto"
+      ]
+    },
+    "fory": {
+      "description": "Enable Apache Fory codec",
+      "dependencies": [
+        "fory"
+      ]
+    }
+  }
+}

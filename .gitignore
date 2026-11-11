@@ -1,0 +1,21 @@
+# .gitignore
+#
+
+# build
+.build
+.xcode
+
+# local settings
+.local.env
+.vscode/
+
+# temporary files
+*.swo
+*.swp
+*~
+.tmp/
+
+# Preset build trees
+/build/
+
+.scratch/

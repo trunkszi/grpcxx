@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "grpcxx",
+  "version-semver": "0.8.0",
+  "description": "Runtime-free C++26 gRPC client and server framework with P2996 compile-time reflection",
+  "homepage": "https://github.com/trunkszi/grpcxx",
+  "license": "MIT",
+  "supports": "linux & x64",
+  "dependencies": [
+    "fmt",
+    "uarch",
+    "uring",
+    "cares",
+    "nexora",
+    "zlib",
+    "zstd",
+    "lz4",
+    "snappy"
+  ],
+  "features": {
+    "tests": {
+      "description": "Unit tests (GoogleTest)",
+      "dependencies": [
+        "gtest"
+      ]
+    },
+    "benchmarks": {
+      "description": "Microbenchmarks (Google Benchmark)",
+      "dependencies": [
+        "benchmark"
+      ]
+    },
+    "full": {
+      "description": "Protobuf and Cap'n Proto IDL message codecs",
+      "dependencies": [
+        {
+          "name": "protobuf",
+          "features": ["libprotoc"]
+        },
+        {
+          "name": "protobuf",
+          "host": true
+        },
+        "capnproto",
+        {
+          "name": "capnproto",
+          "host": true
+        }
+      ]
+    },
+    "codec-fory": {
+      "description": "Apache Fory codec (local overlay port)",
+      "dependencies": [
+        "fory"
+      ]
+    }
+  }
+}

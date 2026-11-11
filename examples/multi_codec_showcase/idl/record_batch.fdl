@@ -1,0 +1,19 @@
+package examples.record_batch.fory;
+
+message RecordRequest {
+  int64 record_id = 1;
+  int64 sequence = 2;
+  int64 count = 3;
+  string tag = 4;
+}
+message RecordReply {
+  int64 record_id = 1;
+  int64 value = 2;
+  int64 count = 3;
+  int64 server = 4;
+}
+
+service RecordStore {
+  rpc Get(RecordRequest) returns (RecordReply);
+  rpc Put(RecordRequest) returns (RecordReply);
+}

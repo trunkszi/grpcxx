@@ -1,0 +1,185 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [gcc-glibc, clang-glibc, gcc-musl, clang-musl]
+    env:
+      GRPCXX_SETUP_JOBS: '2'
+      GRPCXX_TOOLCHAIN: ${{ matrix.toolchain }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install CMake 4.0+
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: latest
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Cache compiler, vcpkg archives, and ccache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/toolchain/${{ matrix.toolchain }}
+            ~/.local/toolchain/gcc-glibc
+            ~/.cache/vcpkg/archives
+            ~/.cache/ccache
+            ~/.local/share/fory-venv
+          key: grpcxx-vcpkg-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ hashFiles('scripts/install-dependencies.sh', '.github/scripts/setup-ci-deps.sh', 'cmake/toolchain/**', 'cmake/triplets/**', 'vcpkg.json', 'CMakePresets.json') }}
+      - name: Install native compiler and dependencies
+        run: |
+          bash scripts/install-dependencies.sh --toolchain "$GRPCXX_TOOLCHAIN"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install clang-tidy-23
+        if: matrix.toolchain == 'clang-glibc'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg
+          curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
+          echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-23 main" | sudo tee /etc/apt/sources.list.d/llvm.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy-23
+      - name: Record kernel and enable io_uring
+        run: |
+          uname -a
+          sudo sysctl -w kernel.io_uring_disabled=0
+      - name: Check scripts and CLI
+        run: |
+          bash -n scripts/install-dependencies.sh .github/scripts/setup-ci-deps.sh
+          uv run --directory scripts/cli ruff check .
+          uv run --directory scripts/cli pytest
+      - name: Check C++ formatting
+        if: matrix.toolchain == 'clang-glibc'
+        run: ./build.py format --check src tests examples benches
+      - name: Check file size limits
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess
+          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          for name in names:
+              path = pathlib.Path(name)
+              if path.is_file() and (path.suffix in {'.h', '.cc', '.py'} or path.name == 'CMakeLists.txt'):
+                  count = len(path.read_bytes().splitlines())
+                  if count >= 600:
+                      raise SystemExit(f'{name}: {count} lines reaches 600-line limit')
+          PY
+      - name: Build and run unit and E2E tests
+        run: ./build.py test --preset "$GRPCXX_TOOLCHAIN" -j 2
+      - name: Clang-tidy
+        if: matrix.toolchain == 'clang-glibc'
+        run: |
+          clang-tidy-23 --version
+          ./build.py tidy --preset clang-glibc
+      - name: Native performance smoke
+        run: ./build.py bench --preset "$GRPCXX_TOOLCHAIN" -j 2 -- --benchmark_min_time=0.01s
+      - name: Audit optimized proactor and runtime codegen
+        run: |
+          ./build.py build --preset "$GRPCXX_TOOLCHAIN" --target grpcxx-transport-codegen -j 2
+          python3 - <<'PY'
+          import os, pathlib, re, subprocess
+          codegen_dir = pathlib.Path('build', os.environ['GRPCXX_TOOLCHAIN'], 'tests/units/h2/CMakeFiles/grpcxx-transport-codegen.dir')
+          expected = {
+              'h2_client_session.cc.o',
+              'h2_server_session.cc.o',
+              'client_channel_service.cc.o',
+              'client_channel_io.cc.o',
+              'grpc_server_service.cc.o',
+              'grpc_server_io.cc.o',
+              'channel_coordinator_service.cc.o',
+              'stream_multiplexer.cc.o',
+              'stream_multiplexer_io.cc.o',
+          }
+          objects = {p.name: str(p) for p in codegen_dir.rglob('*.cc.o')}
+          assert expected.issubset(objects.keys()), (expected - objects.keys(), objects.keys())
+          toolchain = os.environ['GRPCXX_TOOLCHAIN']
+          tools = pathlib.Path.home() / '.local/toolchain' / toolchain / 'bin'
+          if toolchain == 'gcc-glibc':
+              prefix = 'x86_64-unknown-linux-gnu-'
+              disassembler = tools / f'{prefix}objdump'
+              section_tool = [str(tools / f'{prefix}readelf'), '-SW']
+              nm_tool = tools / f'{prefix}nm'
+          elif toolchain == 'gcc-musl':
+              prefix = 'x86_64-unknown-linux-musl-'
+              disassembler = tools / f'{prefix}objdump'
+              section_tool = [str(tools / f'{prefix}readelf'), '-SW']
+              nm_tool = tools / f'{prefix}nm'
+          else:
+              disassembler = tools / 'llvm-objdump'
+              section_tool = [str(tools / 'llvm-readobj'), '--sections']
+              nm_tool = tools / 'llvm-nm'
+          cold_init = (
+              'StreamMultiplexer::StreamMultiplexer(',
+              'ClientChannelService::Impl::SeedEndpoints(',
+              'ClientChannelService::Impl::StepResolver(',
+              'ClientChannelService::Impl::CancelResolver(',
+              'ClientChannelService::ReconcileEndpoints(',
+              'ClientChannelService::ReResolve(',
+              'cares::ComputeTimerDeadline(',
+              'ChannelCoordinatorService::ChannelCoordinatorService(',
+              'ChannelCoordinatorService::Start(',
+              'ChannelCoordinatorService::Set',
+              'ChannelCoordinatorService::AddEndpoint(',
+              'ChannelCoordinatorService::ReconcileEndpoints(',
+              'ChannelCoordinatorService::ClearEndpoints(',
+              'ChannelCoordinatorService::Shutdown(',
+              'EndpointFailover<',
+              'FastDivisorU32::try_new(',
+              'fmt::',
+          )
+          hot = set()
+          for name in sorted(expected):
+              obj = objects[name]
+              asm = subprocess.check_output([str(disassembler), '-d', '-C', '--no-show-raw-insn', obj], text=True)
+              current = ''
+              for line in asm.splitlines():
+                  if match := re.match(r'^[0-9a-f]+ <(.+)>:', line):
+                      current = match[1]
+                      if any(tag in current for tag in (
+                          'H2ClientSession::Receive(',
+                          'H2ServerSession::Receive(',
+                          'ClientChannelService::PollOnce(',
+                          'GrpcServerService::PollOnce(',
+                          'ChannelCoordinatorService::SelectIndex(',
+                          'ChannelCoordinatorService::SelectEndpoint(',
+                      )):
+                          hot.add(current)
+                  if not any(tag in current for tag in cold_init):
+                      assert not re.search(r'\b(?:i?div[bwlq]?|__udivti3)\b', line), (name, current, line)
+              sections = subprocess.check_output([*section_tool, obj], text=True)
+              assert '.gcc_except_table' not in sections, name
+              symbols = subprocess.check_output([str(nm_tool), obj], text=True)
+              assert '__cxa_throw' not in symbols, name
+              assert '_ZTI' not in symbols, name
+          assert len(hot) >= 6, hot
+          print(f'Verified {len(expected)} -O3 objects: no hot-path division; no exception tables; no RTTI')
+          PY
+      - name: Run ASan and UBSan lifecycle tests
+        if: matrix.toolchain == 'gcc-glibc' || matrix.toolchain == 'clang-glibc'
+        run: |
+          if [[ "$GRPCXX_TOOLCHAIN" == gcc-glibc ]]; then preset=gcc-asan; else preset=clang-asan; fi
+          ./build.py test --preset "$preset" -j 2
+      - name: Archive test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-diagnostics-${{ matrix.toolchain }}
+          path: |
+            build/**/Testing/Temporary/
+            build/**/CMakeFiles/CMakeConfigureLog.yaml
+          if-no-files-found: ignore

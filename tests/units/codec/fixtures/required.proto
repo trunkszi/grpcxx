@@ -1,0 +1,3 @@
+syntax = "proto2";
+package codec_fixture;
+message RequiredRequest { required int64 id = 1; }

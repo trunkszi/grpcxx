@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 4.0)
+add_executable(test_grpc_http2_headers test_grpc_http2_headers.cc)
+target_link_libraries(test_grpc_http2_headers PRIVATE grpcxx::sync GTest::gtest_main)
+add_test(NAME grpc_http2_headers COMMAND test_grpc_http2_headers)
+set_tests_properties(grpc_http2_headers PROPERTIES LABELS "unit;library;sync;headers")
+
+add_executable(test_sync_in_memory_rpc test_sync_in_memory_rpc.cc test_callback_status.cc)
+target_link_libraries(test_sync_in_memory_rpc PRIVATE grpcxx::sync GTest::gtest_main)
+add_test(NAME sync_in_memory_rpc COMMAND test_sync_in_memory_rpc)
+set_tests_properties(sync_in_memory_rpc PROPERTIES LABELS "unit;library;sync;in_memory")
+
+add_executable(test_sync_sockets_tls_cancel test_sync_sockets_tls_cancel.cc)
+target_link_libraries(test_sync_sockets_tls_cancel PRIVATE grpcxx::sync GTest::gtest_main)
+add_test(NAME sync_sockets_tls_cancel COMMAND test_sync_sockets_tls_cancel)
+set_tests_properties(sync_sockets_tls_cancel PROPERTIES LABELS "unit;library;sync;sockets_tls")
+
+add_executable(test_sync_stall_lifetime test_sync_stall_lifetime.cc)
+target_link_libraries(test_sync_stall_lifetime PRIVATE grpcxx::sync GTest::gtest_main)
+add_test(NAME sync_stall_lifetime COMMAND test_sync_stall_lifetime)
+set_tests_properties(sync_stall_lifetime PROPERTIES LABELS "unit;library;sync;lifetime")

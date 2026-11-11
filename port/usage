@@ -1,0 +1,7 @@
+grpcxx provides a runtime-free C++26 gRPC client and server framework. Consumers need CMake >= 4.0 and vcpkg manifest mode with VCPKG_OVERLAY_PORTS set to $HOME/.local/vcpkg.
+
+    find_package(grpcxx CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE grpcxx::grpcxx)
+
+Individual modules are exported under the grpcxx:: namespace (for example grpcxx::core, grpcxx::h2, grpcxx::client, grpcxx::server, grpcxx::channel, grpcxx::streaming, grpcxx::compression, grpcxx::sync, and enabled codec targets).
+Contract generation helpers are imported automatically via grpcxx_generate_contracts().

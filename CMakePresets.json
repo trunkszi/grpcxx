@@ -1,0 +1,270 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 0,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "vcpkg-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_TOOLCHAIN_FILE": "$penv{HOME}/.vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_HOST_TRIPLET": "x64-linux-gcc-glibc",
+        "VCPKG_OVERLAY_PORTS": "$penv{HOME}/.local/vcpkg",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",
+        "VCPKG_INSTALL_OPTIONS": "--no-print-usage",
+        "CMAKE_MAP_IMPORTED_CONFIG_DEBUG": "Release;None;",
+        "CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO": "Release;None;",
+        "GRPCXX_BUILD_TESTING": "ON",
+        "GRPCXX_BUILD_BENCHMARKS": "ON",
+        "GRPCXX_BUILD_EXAMPLES": "ON"
+      },
+      "environment": {
+        "CCACHE_DIR": "$penv{HOME}/.cache/ccache",
+        "VCPKG_DEFAULT_BINARY_CACHE": "$penv{HOME}/.cache/vcpkg/archives",
+        "VCPKG_FORCE_SYSTEM_BINARIES": "1",
+        "TOOLCHAIN_ROOT": "$penv{HOME}/.local/toolchain",
+        "FORY_PYTHON": "$penv{HOME}/.local/share/fory-venv/bin/python3"
+      }
+    },
+    {
+      "name": "gcc-glibc",
+      "inherits": "vcpkg-base",
+      "displayName": "GCC 16 / glibc",
+      "binaryDir": "${sourceDir}/build/gcc-glibc",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux-gcc-glibc",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/gcc-glibc.cmake",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/gcc-glibc/vcpkg_installed",
+        "VCPKG_MANIFEST_FEATURES": "tests;full;codec-fory;benchmarks"
+      },
+      "environment": {
+        "TMPDIR": "${sourceDir}/build/gcc-glibc/tmp",
+        "TMP": "${sourceDir}/build/gcc-glibc/tmp",
+        "TEMP": "${sourceDir}/build/gcc-glibc/tmp",
+        "PROTOC": "${sourceDir}/build/gcc-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/gcc-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/gcc-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "clang-glibc",
+      "inherits": "vcpkg-base",
+      "displayName": "Clang P2996 / glibc",
+      "binaryDir": "${sourceDir}/build/clang-glibc",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux-clang-glibc",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/clang-glibc.cmake",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/clang-glibc/vcpkg_installed",
+        "VCPKG_MANIFEST_FEATURES": "tests;full;codec-fory;benchmarks"
+      },
+      "environment": {
+        "TMPDIR": "${sourceDir}/build/clang-glibc/tmp",
+        "TMP": "${sourceDir}/build/clang-glibc/tmp",
+        "TEMP": "${sourceDir}/build/clang-glibc/tmp",
+        "PROTOC": "${sourceDir}/build/clang-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/clang-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/clang-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "gcc-musl",
+      "inherits": "vcpkg-base",
+      "displayName": "GCC 16 / musl",
+      "binaryDir": "${sourceDir}/build/gcc-musl",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux-gcc-musl",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/gcc-musl.cmake",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/gcc-musl/vcpkg_installed",
+        "VCPKG_MANIFEST_FEATURES": "tests;full;codec-fory;benchmarks"
+      },
+      "environment": {
+        "TMPDIR": "${sourceDir}/build/gcc-musl/tmp",
+        "TMP": "${sourceDir}/build/gcc-musl/tmp",
+        "TEMP": "${sourceDir}/build/gcc-musl/tmp",
+        "PROTOC": "${sourceDir}/build/gcc-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/gcc-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/gcc-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "clang-musl",
+      "inherits": "vcpkg-base",
+      "displayName": "Clang P2996 / musl",
+      "binaryDir": "${sourceDir}/build/clang-musl",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux-clang-musl",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/clang-musl.cmake",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/clang-musl/vcpkg_installed",
+        "VCPKG_MANIFEST_FEATURES": "tests;full;codec-fory;benchmarks"
+      },
+      "environment": {
+        "TMPDIR": "${sourceDir}/build/clang-musl/tmp",
+        "TMP": "${sourceDir}/build/clang-musl/tmp",
+        "TEMP": "${sourceDir}/build/clang-musl/tmp",
+        "PROTOC": "${sourceDir}/build/clang-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/clang-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/clang-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "gcc-asan",
+      "inherits": "vcpkg-base",
+      "displayName": "GCC 16 / glibc ASan+UBSan",
+      "binaryDir": "${sourceDir}/build/gcc-asan",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux-gcc-glibc-asan",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/gcc-glibc.cmake",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/gcc-asan/vcpkg_installed",
+        "VCPKG_MANIFEST_FEATURES": "tests;full;codec-fory;benchmarks",
+        "CMAKE_PROJECT_INCLUDE": "${sourceDir}/cmake/asan-consumer-flags.cmake"
+      },
+      "environment": {
+        "TMPDIR": "${sourceDir}/build/gcc-asan/tmp",
+        "TMP": "${sourceDir}/build/gcc-asan/tmp",
+        "TEMP": "${sourceDir}/build/gcc-asan/tmp",
+        "PROTOC": "${sourceDir}/build/gcc-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/gcc-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/gcc-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "clang-asan",
+      "inherits": "vcpkg-base",
+      "displayName": "Clang P2996 / glibc ASan+UBSan",
+      "binaryDir": "${sourceDir}/build/clang-asan",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux-clang-glibc-asan",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/clang-glibc.cmake",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/clang-asan/vcpkg_installed",
+        "VCPKG_MANIFEST_FEATURES": "tests;full;codec-fory;benchmarks",
+        "CMAKE_PROJECT_INCLUDE": "${sourceDir}/cmake/asan-consumer-flags.cmake"
+      },
+      "environment": {
+        "TMPDIR": "${sourceDir}/build/clang-asan/tmp",
+        "TMP": "${sourceDir}/build/clang-asan/tmp",
+        "TEMP": "${sourceDir}/build/clang-asan/tmp",
+        "PROTOC": "${sourceDir}/build/clang-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/clang-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/clang-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc-glibc",
+      "configurePreset": "gcc-glibc",
+      "jobs": 4,
+      "environment": {
+        "CCACHE_DIR": "$penv{HOME}/.cache/ccache",
+        "TMPDIR": "${sourceDir}/build/gcc-glibc/tmp",
+        "TMP": "${sourceDir}/build/gcc-glibc/tmp",
+        "TEMP": "${sourceDir}/build/gcc-glibc/tmp",
+        "PROTOC": "${sourceDir}/build/gcc-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/gcc-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/gcc-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "clang-glibc",
+      "configurePreset": "clang-glibc",
+      "jobs": 4,
+      "environment": {
+        "CCACHE_DIR": "$penv{HOME}/.cache/ccache",
+        "TMPDIR": "${sourceDir}/build/clang-glibc/tmp",
+        "TMP": "${sourceDir}/build/clang-glibc/tmp",
+        "TEMP": "${sourceDir}/build/clang-glibc/tmp",
+        "PROTOC": "${sourceDir}/build/clang-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/clang-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/clang-glibc/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "gcc-musl",
+      "configurePreset": "gcc-musl",
+      "jobs": 4,
+      "environment": {
+        "CCACHE_DIR": "$penv{HOME}/.cache/ccache",
+        "TMPDIR": "${sourceDir}/build/gcc-musl/tmp",
+        "TMP": "${sourceDir}/build/gcc-musl/tmp",
+        "TEMP": "${sourceDir}/build/gcc-musl/tmp",
+        "PROTOC": "${sourceDir}/build/gcc-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/gcc-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/gcc-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "clang-musl",
+      "configurePreset": "clang-musl",
+      "jobs": 4,
+      "environment": {
+        "CCACHE_DIR": "$penv{HOME}/.cache/ccache",
+        "TMPDIR": "${sourceDir}/build/clang-musl/tmp",
+        "TMP": "${sourceDir}/build/clang-musl/tmp",
+        "TEMP": "${sourceDir}/build/clang-musl/tmp",
+        "PROTOC": "${sourceDir}/build/clang-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/clang-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/clang-musl/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "gcc-asan",
+      "configurePreset": "gcc-asan",
+      "jobs": 4,
+      "environment": {
+        "CCACHE_DIR": "$penv{HOME}/.cache/ccache",
+        "TMPDIR": "${sourceDir}/build/gcc-asan/tmp",
+        "TMP": "${sourceDir}/build/gcc-asan/tmp",
+        "TEMP": "${sourceDir}/build/gcc-asan/tmp",
+        "PROTOC": "${sourceDir}/build/gcc-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/gcc-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/gcc-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    },
+    {
+      "name": "clang-asan",
+      "configurePreset": "clang-asan",
+      "jobs": 4,
+      "environment": {
+        "CCACHE_DIR": "$penv{HOME}/.cache/ccache",
+        "TMPDIR": "${sourceDir}/build/clang-asan/tmp",
+        "TMP": "${sourceDir}/build/clang-asan/tmp",
+        "TEMP": "${sourceDir}/build/clang-asan/tmp",
+        "PROTOC": "${sourceDir}/build/clang-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf/protoc",
+        "PATH": "${sourceDir}/build/clang-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/protobuf:${sourceDir}/build/clang-asan/vcpkg_installed/x64-linux-gcc-glibc/tools/capnproto:$penv{PATH}"
+      }
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "gcc-glibc",
+      "configurePreset": "gcc-glibc",
+      "output": {"outputOnFailure": true},
+      "execution": {"jobs": 4, "noTestsAction": "error"}
+    },
+    {
+      "name": "clang-glibc",
+      "configurePreset": "clang-glibc",
+      "output": {"outputOnFailure": true},
+      "execution": {"jobs": 4, "noTestsAction": "error"}
+    },
+    {
+      "name": "gcc-musl",
+      "configurePreset": "gcc-musl",
+      "output": {"outputOnFailure": true},
+      "execution": {"jobs": 4, "noTestsAction": "error"}
+    },
+    {
+      "name": "clang-musl",
+      "configurePreset": "clang-musl",
+      "output": {"outputOnFailure": true},
+      "execution": {"jobs": 4, "noTestsAction": "error"}
+    },
+    {
+      "name": "gcc-asan",
+      "configurePreset": "gcc-asan",
+      "output": {"outputOnFailure": true},
+      "execution": {"jobs": 4, "noTestsAction": "error"}
+    },
+    {
+      "name": "clang-asan",
+      "configurePreset": "clang-asan",
+      "output": {"outputOnFailure": true},
+      "execution": {"jobs": 4, "noTestsAction": "error"}
+    }
+  ]
+}

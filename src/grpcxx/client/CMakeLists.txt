@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 4.0)
+add_library(grpcxx_client STATIC client_channel_service.cc client_channel_io.cc)
+add_library(grpcxx::client ALIAS grpcxx_client)
+target_include_directories(grpcxx_client PUBLIC "${PROJECT_SOURCE_DIR}/src")
+target_link_libraries(grpcxx_client PUBLIC grpcxx::core nexora::nexora grpcxx::h2)
+target_compile_options(grpcxx_client PRIVATE -Werror)

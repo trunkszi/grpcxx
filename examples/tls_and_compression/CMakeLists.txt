@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 4.0)
+if(NOT TARGET grpcxx::compression)
+  message(FATAL_ERROR "Build TLS/compression example through the grpcxx root")
+endif()
+add_executable(tls_and_compression main.cc)
+target_link_libraries(tls_and_compression PRIVATE grpcxx::compression nexora::tls)
